@@ -55,12 +55,19 @@ def get_meta(string):
 
 # a lot of nonsense is here.. need to remove and rewrite stuff.
 class Context:
-    def __init__(self):
-        self.string = ''
-        self.tokens = []
+    def __init__(self, size):
         self.objects = []
-        self.token_count = 0
+        self.size = size
+    
+    def check_if_full(self):
+        '''
+        conditions:
+            - token count == self.size
+            - starts with meta, has corresponding story right after
+            - 
+        '''
 
+    '''
     def add_text(self, meta):
         self.meta_list.append(meta)
 
@@ -95,6 +102,8 @@ class Context:
     
     def analysis(self):
         pass
+    '''
+
 
 class Meta:
     def __init__(self, string, story_object):
@@ -112,6 +121,7 @@ class Story:
 '''
 Singleton class.  (which is not enforced programmatically)
 
+(aspirations below)
 Has a representation of the entire training set:
 - knows how each story's metadata and text content is distributed
 - knows how everything is tokenized
@@ -133,12 +143,14 @@ paths = [f'{folder}/{f}' for f in os.listdir(folder)]
 story_strings = list(map(text_read, paths))
 meta_objects = []
 story_objects = []
+# create and store Meta and Story pairs
 for s in story_strings:
     s_o = Story(s)
     m_o = s_o.meta_object
     story_objects.append(s_o)
     meta_objects.append(m_o)
 
+# checking if stuff goes as expected
 for s, m in zip(story_objects, meta_objects):
     print(s, m)
     print(s.meta_object == m)
@@ -147,7 +159,6 @@ for s, m in zip(story_objects, meta_objects):
     print('---')
     print(s.string)
     print('------------------')
-
 
 
 
