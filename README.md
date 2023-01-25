@@ -1,2 +1,2 @@
-# NAI-chonky
+# NAI-chonky (NOT DONE YET)
 chunking algorithm for NAI modules
