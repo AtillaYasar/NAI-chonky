@@ -6,3 +6,6 @@
   + the hard part is to create chunks of exactly 256-token-multiples, to have precise control over how each chunk looks.
 - ![Screenshot_1](https://user-images.githubusercontent.com/112716905/214617548-5f6d65e9-fc6e-4a4c-b3f3-4955fe9451fd.png)
 
+## progress updates
+- from jan 27th, when thinking about the app:
+  + ![chonky updates 27](https://user-images.githubusercontent.com/112716905/214974378-d609e812-058c-4ba7-9a10-e1b920b54c92.png)
