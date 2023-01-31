@@ -13,3 +13,6 @@
   + uploaded main.py, which is the beginning of a refactor.
   + "why on earth would you upload the *beginning* of a refactor?"
     - "idk."
+  + i had a solution with the simplifying assumptions of, "every story is bigger than the total context size, and you only put the part of the story inside the context that fits, and discard the rest".
+    - then tried to expand on that solution, but the code was too messy and very frustrating to work with, so i started a refactor.
+
