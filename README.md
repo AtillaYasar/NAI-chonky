@@ -9,3 +9,7 @@
 ## progress updates
 - from jan 27th, when thinking about the app:
   + ![chonky updates 27](https://user-images.githubusercontent.com/112716905/214974378-d609e812-058c-4ba7-9a10-e1b920b54c92.png)
+- jan 31st:
+  + uploaded main.py, which is the beginning of a refactor.
+  + "why on earth would you upload the *beginning* of a refactor?"
+    - "idk."
