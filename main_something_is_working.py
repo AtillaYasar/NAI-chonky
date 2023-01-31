@@ -205,7 +205,7 @@ class TrainingData:
         return ''.join(chunks)
 
 # create and store Story objects.
-folder = 'hpmor'
+folder = 'stories'
 paths = [f'{folder}/{f}' for f in os.listdir(folder)]
 story_strings = list(map(text_read, paths))
 story_objects = []
