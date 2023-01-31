@@ -1,19 +1,3 @@
-class Tracker:
-    def __init__(self):
-        self.stuff = []
-
-class MyClass:
-    def __init__(self):
-        self.attribute = 'placeholder'
-        tracker.stuff.append(self)
-
-tracker = Tracker()
-for i in range(3):
-    o = MyClass()
-    for ob in tracker.stuff:
-        print(tracker.stuff)
-        assert tracker.stuff.count(ob) == 1
-
 '''
 General overview.
 (was outdated, so i deleted it)
