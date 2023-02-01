@@ -129,7 +129,8 @@ class Story:
         if custom_meta == None:
             metadata = get_meta(string, top_n=10, reverse=False)
         else:
-            assert type(custom_meta) is str
+            if type(custom_meta) is not str:
+                raise Exception('custom meta must be a string')
             metadata = custom_meta
         self.meta_object = Meta(
             string=metadata,
@@ -207,7 +208,6 @@ class TrainingData:
 # create and store Story objects.
 folder = 'stories'
 paths = [f'{folder}/{f}' for f in os.listdir(folder)]
-story_strings = list(map(text_read, paths))
 story_objects = []
 for p in paths:
     string = text_read(p)
@@ -218,6 +218,7 @@ training_data = TrainingData(story_objects)
 
 # this is where all the magic happens, huehueheuehueh
 context_size = int(round(1.2*max([len(tokenize(o.string)) for o in story_objects]), 0))
+context_size = 3000
 # add the first context object, to start off the process
 c = Context(context_size)
 training_data.context_objects.append(c)
@@ -242,7 +243,7 @@ def for_terminal():
         lines.append(f'{ind*ind_level}context number {col("cy",cn)}')
         for on, o in enumerate(c.objects):
             ind_level = 2
-            lines.append(f'{ind*ind_level}object number {col("gr",on)}')
+            lines.append(f'{ind*ind_level}object number {col("gr",on)}, token count:{len(tokenize(o.string))}')
             ind_level = 3
             lines.append('\n'.join([f'{ind*ind_level}{line}' for line in str(o).split('\n')]))
     lines.append(col('ye', '--- for_terminal end ---'))
@@ -307,7 +308,7 @@ for n, c in enumerate(training_data.context_objects):
     count = len(tokenize(text))
     text_create(f'chunk number {n}.txt', text)
     print(f'context number: {n}, token count {count}')
-
+print('all text tokens:', len(tokenize(''.join([text_read(path) for path in paths]))))
 # log the end
 logging.info('===== ===== =====')
 logging.info('===== ===== =====')
