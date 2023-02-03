@@ -1,12 +1,34 @@
 '''
-General overview.
-(was outdated, so i deleted it)
 
-Progress in general:
-- i am refactoring the code
-- just removed a lot of stuff that made everything complex and made me pull my hair out
+
+classes
+Meta
+	attributes
+		.string
+		.story_object
+Story
+	attributes
+		.string
+		.meta_object
+	methods
+		.shrink(new_size)
+Context
+	attributes
+		.objects
+		.size
+		.complete
+	methods
+		.add_story(story_object)
+TrainingData
+	attributes
+		.all_story_objects
+		.context_objects
+		.current_context
+	methods
+		.get_overview()
+		.create_txt()
+		.add_story_object(story_object)
 '''
-
 
 import json, os, time, logging
 
@@ -108,37 +130,53 @@ def search_iterator(lst, checker, on_unfound='give an error'):
         return next( (item for item in lst if checker(item)), default=on_unfound )
 
 class Meta:
-    def __init__(self, string, story_object):
+    def __init__(self, string, story_object=None):
         self.string = string
         self.story_object = story_object
+
+        if story_object != None:
+            assert type(story_object) is Story
+
     def __repr__(self):
         n = 20
-        return f'Meta object: first {n} chars:' + self.string[:n]
+        d = {
+            'type':'Meta',
+            f'first {n} chars':self.string[:n]
+        }
+        # return json.dumps(d, indent=2)
+        return d['type'] + ' object' + '\n' + self.string
 
 class Story:
-    def __init__(self, string, custom_meta=None):
+    def __init__(self, string, meta_object=None):
         prefix = ''
         suffix = '\n'
         self.string = ''.join([prefix, string, suffix])
+        self.meta_object = meta_object
 
-        if custom_meta == None:
-            metadata = get_meta(string, top_n=10, reverse=False)
-        else:
-            assert type(custom_meta) is str
-            metadata = custom_meta
-        self.meta_object = Meta(
-            string=metadata,
-            story_object=self
-        )
+        if meta_object != None:
+            assert type(meta_object) is Meta
+
     def __repr__(self):
         n = 20
-        return f'Story object: first {n} chars:' + self.string[:n]
+        d = {
+            'type':'Story',
+            f'first {n} chars':self.string[:n]
+        }
+        # return json.dumps(d, indent=2)
+        return d['type'] + ' object' + '\n' + d[f'first {n} chars']
 
+    # instead of shrinking, it splits in two.
     def shrink(self, new_size):
         if type(new_size) is not int:
             raise Exception('new_size must be int')
+
         tokens = tokenize(self.string)
-        self.string = untokenize(tokens[:new_size])
+        front = tokens[:new_size]
+        tail = tokens[new_size:]
+        self.string = untokenize(front)
+
+        new_story = Story(string=untokenize(tail), meta_object=self.meta_object)
+        training_data.add_story_object(new_story)
 
 class Context:
     def __init__(self, size):
@@ -169,45 +207,157 @@ class TrainingData:
         self.context_objects = []
         self.current_context = None
 
-    # Context calls this to know how to fill a piece of context.
     def get_overview(self):
-        raise Exception('this is not written yet.')
-    
-    def create_txt(self):
-        raise Exception('not written yet.')
+        def check_added(story_object):
+            # iterate over context_objects, check if this story_object is in any of them
+            for c in self.context_objects:
+                if story_object in c.objects:
+                    return True
+            return False
 
-# create and store Story objects.
+        # iterate over story_objects, find which ones havent been included in a context yet.
+        unadded = []
+        for s in self.all_story_objects:
+            if check_added(s) == False:
+                unadded.append(s)
+        finished = True if unadded == [] else False
+        return {'unadded':unadded, 'finished':finished}
+
+    def create_txt(self):
+        chunks = []
+        for c in self.context_objects:
+            this_chunk = []
+            for o in c.objects:
+                this_chunk.append(o.string)
+            chunks.append(''.join(this_chunk))
+        return ''.join(chunks)
+    
+    # i want all_story_objects to only be altered via this route.
+    def add_story_object(self, story_object):
+        self.all_story_objects.append(story_object)
+
+# returns an ansi escape sequence to color a string.  (ft is "first two", s is "string")
+def col(ft, s):
+    # black-30, red-31, green-32, yellow-33, blue-34, magenta-35, cyan-36, white-37
+    u = '\u001b'
+    numbers = dict([(string,30+n) for n, string in enumerate(('bl','re','gr','ye','blu','ma','cy','wh'))])
+    n = numbers[ft]
+    return f'{u}[{n}m{s}{u}[0m'
+
+# prints stuff about the training data with pretty colors and indentation.
+def for_terminal():
+    lines = []
+    ind = ' '*4
+    ind_level = 0
+    lines.append(col('ye', '--- for_terminal start ---'))
+    for cn, c in enumerate(training_data.context_objects):
+        ind_level = 1
+        lines.append(f'{ind*ind_level}context number {col("cy",cn)}')
+        for on, o in enumerate(c.objects):
+            ind_level = 2
+            lines.append(f'{ind*ind_level}object number {col("gr",on)}, token count:{len(tokenize(o.string))}')
+            ind_level = 3
+            lines.append('\n'.join([f'{ind*ind_level}{line}' for line in str(o).split('\n')]))
+    lines.append(col('ye', '--- for_terminal end ---'))
+    return '\n'.join(lines)
+
+# create/connect/story Meta and Story objects
 folder = 'stories'
 paths = [f'{folder}/{f}' for f in os.listdir(folder)]
-story_strings = list(map(text_read, paths))
+print(paths)
 story_objects = []
-for s in story_strings:
-    s_o = Story(s)
+for p in paths:
+    string = text_read(p)
+    meta = f'[ the path to this file is:{p} ]\n'
+    # create
+    s_o = Story(string=string)
+    m_o = Meta(string=meta)
+    # connect
+    s_o.meta_object = m_o
+    m_o.story_object = s_o
+    # store
     story_objects.append(s_o)
 training_data = TrainingData(story_objects)
 
 # this is where all the magic happens, huehueheuehueh
 context_size = int(round(1.2*max([len(tokenize(o.string)) for o in story_objects]), 0))
+context_size = 256
+# add the first context object, to start off the process
+c = Context(context_size)
+training_data.context_objects.append(c)
+training_data.current_context = c
+
 loop_counter = 0
 while True:
     print(f'loop_counter:{loop_counter}')
+    print(for_terminal())
 
-    # continue current context, or make a new one
-    pass
+    # continue with current context, or make a new one
+    if training_data.current_context.complete == True:
+        # make a new one
+        new_context = Context(context_size)
+        training_data.current_context = new_context
+        curc = training_data.current_context
+        training_data.context_objects.append(curc)
+    else:
+        curc = training_data.current_context
 
     # get next story
-    pass
+    overview = training_data.get_overview()
+    if overview['finished'] == True:
+        print(col('ma', 'done with loop'))
+        print(for_terminal())
+        break
+    next_story = overview['unadded'][0]
     
-    # add story to context
-    pass
+    # add story to context  (will add the associated metadata as well)
+    curc.add_story(next_story)
+
+    # check how full context is
+    space_used = sum([len(tokenize(o.string)) for o in curc.objects])
+    if space_used > curc.size:
+        # shrink the latest story object to make it fit
+        last_story = curc.objects[-1]
+        current_size = len(tokenize(last_story.string))
+        excess = space_used - curc.size
+        new_size = current_size - excess
+        if new_size < 0:
+            raise Exception('new_size is negative. cant shrink to negative sizes bruv.')
+
+        curc.objects[-1].shrink(new_size)
+        curc.complete = True
+    elif space_used < curc.size:
+        pass
+    else:
+        curc.complete = True
     
     loop_counter += 1
 
-# create txt file and do final check
-res = ''.join(training_data.create_txt)
+# create txt file and do final checking
+res = training_data.create_txt()
 text_create('training_data.txt', res)
-if not len(tokenize(res)) == context_size*len(training_data.chunks):
-    raise Exception('final token count went wrong')
+
+# create seperate files for each chunk
+print(f'context size: {context_size}')
+for n, c in enumerate(training_data.context_objects):
+    chunk = []
+    for o in c.objects:
+        chunk.append(o.string)
+    text = ''.join(chunk)
+    count = len(tokenize(text))
+    text_create(f'chunk number {n}.txt', text)
+    print(f'context number: {n}, token count {count}')
+
+retokenized = tokenize(res)
+print('all text tokens:', len(retokenized))
+
+# cut final .txt into context_size chunks again, and check the beginning of each chunk.
+for i in range(len(retokenized)//context_size):
+    start = i * context_size
+    plus = 10
+    print({f'{start} : {start+plus}':untokenize(retokenized[start:(start+plus)]), 'i':i})
+
+
 
 # log the end
 logging.info('===== ===== =====')
