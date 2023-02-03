@@ -17,3 +17,6 @@
     - then tried to expand on that solution by removing making the context size bigger than the biggest story (so that the program has to account for multiple stories in a context), but the code was too messy and very frustrating to work with, so i started a refactor.
   + state of classes right now:
     - ![classes](https://user-images.githubusercontent.com/112716905/216024724-9c0f0640-cacb-467d-b52d-19585fa4f699.png)
+ - current problem:
+  + start of chunk drifts. so each metadata starts with a bracket, which is the start of each chunk. but this is not happening exactly when i tokenize and check the final training data file.
+  + ![image](https://user-images.githubusercontent.com/112716905/216539810-5175a994-2849-454c-8a92-4e592d573025.png)
